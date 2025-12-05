@@ -1,0 +1,115 @@
+---
+title: "Analyse Arcom – Projet R3"
+auteur : « Assia »
+Sortie : html_document
+---
+
+'''{r setup, include=FALSE}
+# options de base
+knitr ::opts_chunk$set(echo = TRUE)
+bibliothèque (dplyr)
+bibliothèque (ggplot2)
+
+1. Présentation et problématique
+Ce project analyse des données issues de l’étude Les Français et l’information – Arcom 2024, qui porte sur l’intérêt pour l’information et les pratiques numériques.
+La base utilisée contient plusieurs centaines d’observations issues d’un questionnaire représentatif.
+Axe choisi :
+Le niveau d’études influence-t-il l’intérêt pour l’information et l’usage d’Internet ?
+Variables utilisées (issues du questionnaire Arcom) :
+RS5_R : niveau d’études atteint
+INT1_R : intérêt global pour l’information
+FREQ_INTERNET_R : fréquence d’utilisation d’Internet
+Hypothèse :
+Plus le niveau d’études est élevé, plus l’usage d’Internet est intensif et plus l’intérêt pour l’information est fort.
+donnees_brutes <- read.table(
+"les-francais-et-l-information-arcom-2024-base-anonymisee.txt",
+header = TRUE,
+sep = "\t",
+dec = ",",
+encoding = "latin1"
+)
+donnees <- donnees_brutes %>%
+select(RS5_R, INT1_R, FREQ_INTERNET_R)
+str(donnees)
+summary(donnees)
+Je garde que les 3 variables qui m'intéressent
+df <- donnees %>%
+select(RS5_R, INT1_R, FREQ_INTERNET_R)
+Niveau d'études (je recode en texte)
+df$etudes <- factor(df$RS5_R,
+levels = 1:9,
+labels = c("Primaires", "Collège", "Lycée",
+"CAP/BEP", "Bac", "BTS/DUT",
+"Licence", "Master", "Doctorat"))
+Intérêt information
+df$interet <- factor(df$INT1_R,
+levels = 1:4,
+labels = c("Très intéressé(e)",
+"Assez intéressé(e)",
+"Peu intéressé(e)",
+"Pas du tout"))
+Fréquence Internet
+df$internet <- factor(df$FREQ_INTERNET_R,
+levels = 1:3,
+labels = c("Plusieurs fois / jour",
+"1 fois par jour",
+"Moins souvent"))
+ma_table <- function(x){
+tab <- table(x)
+pct <- round(tab / sum(tab) * 100, 1)
+data.frame(Modalité = names(tab),
+Effectif = as.numeric(tab),
+Pourcentage = as.numeric(pct))
+}
+5. Analyse descriptive
+5.1 Niveau d’études
+ma_table(df$etudes)
+ggplot(df, aes(x = etudes)) +
+geom_bar(fill="skyblue") +
+theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+labs(title="Niveau d'études", x="", y="Effectif")
+5.2 Intérêt pour l’information
+ma_table(df$interet)
+ggplot(df, aes(x = interet)) +
+geom_bar(fill="lightgreen") +
+labs(title="Intérêt pour l'information", x="", y="Effectif")
+5.3 Fréquence Internet
+ma_table(df$internet)
+ggplot(df, aes(x = internet)) +
+geom_bar(fill="pink") +
+labs(title="Fréquence d'utilisation d'Internet", x="", y="Effectif")
+6. Croisements 
+6.1 Études × Internet
+tab1 <- table(df$etudes, df$internet)
+tab1
+round(prop.table(tab1, 1) * 100, 1)
+chisq.test(tab1)
+df1 <- as.data.frame(tab1)
+colnames(df1) <- c("etudes", "internet", "eff")
+ggplot(df1, aes(x = etudes, y = eff, fill = internet)) +
+geom_bar(stat="identity", position="fill") +
+theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+labs(title="Études et fréquence Internet", y="Proportion", x="")
+6.2 Études × Intérêt
+tab2 <- table(df$etudes, df$interet)
+tab2
+round(prop.table(tab2, 1) * 100, 1)
+chisq.test(tab2)
+df2 <- as.data.frame(tab2)
+colnames(df2) <- c("etudes", "interet", "eff")
+ggplot(df2, aes(x = etudes, y = eff, fill = interet)) +
+geom_bar(stat="identity", position="fill") +
+theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+labs(title="Études et intérêt pour l'information", y="Proportion", x="")
+7. Analyse des résultats
+D’après les résultats, on voit globalement que les gens qui ont un niveau d’études plus élevé utilisent Internet plus souvent (surtout plusieurs fois par jour).
+Pour l’intérêt pour l’information, 
+les personnes avec plus d’études ont l’air plus intéressées que les autres.
+Les tests du chi-deux montrent que c’est significatif, donc il y a un lien entre les variables.
+Il peut y avoir d’autres facteurs aussi (âge, profession…).
+8. Conclusion
+En résumé, le niveau d’études semble lié à :
+la fréquence d’utilisation d’Internet
+l’intérêt pour l’information
+Les personnes plus diplômées déclarent s’informer plus et utiliser davantage Internet.
+C’est cohérent avec les résultats qu’on voit souvent dans les rapports Arcom/Ifop. 
