@@ -1,7 +1,7 @@
 ---
 title: "Analyse Arcom – Projet R3"
-auteur : « Assia »
-Sortie : html_document
+auteur: « Assia »
+Sortie: html_document
 ---
 
 '''{r setup, include=FALSE}
